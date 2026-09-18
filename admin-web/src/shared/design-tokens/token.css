@@ -1,0 +1,44 @@
+* {
+    box-sizing: border-box;
+}
+
+:root {
+    /* Colors — from §2.1 */
+    --maroon-950: #3E0B15;
+    --maroon-800: #5C1220;
+    --maroon-700: #7A1B2B;
+
+    --gold-500: #F2A93B;
+    --gold-400: #F7BE5F;
+    --gold-300: #FBD383;
+    --gold-200: #FFE3B0;
+
+    --cream-50: #FFF8ED;
+
+    --ink-900: #2A1509;
+    --ink-600: #6B4A34;
+
+    --green-600: #3F8F5F;
+    --blue-600: #2F6FB2;
+
+    --red-600:#B23A2E;
+
+    --line: #EADFC9;
+
+    /* Spacing, radius, elevation — from §2.3 */
+    --radius-card: 18px;
+    --radius-pill: 999px;
+    --space-section: 80px;
+    --space-card-gap: 15px;
+    --shadow-card: 0 10px 30px -12px rgba(62, 11, 21, 0.35);
+
+    --font-display: 'Lalezar', sans-serif;
+    --font-body: 'Cairo', sans-serif;
+
+    --hero-title-size: 4rem;
+
+}
+
+p {
+    margin: 0;
+}
