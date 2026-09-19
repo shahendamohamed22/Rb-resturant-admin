@@ -6,8 +6,12 @@ export const ENDPOINTS = {
   adminLogin: '/auth/admin/login',
 
   // §7.6.1 Menu Management
+  menu: (branchId) => `/menu?branchId=${branchId}`,
   menuItems: '/admin/menu-items',
   menuItemById: (id) => `/admin/menu-items/${id}`,
+  menuCategories: '/admin/menu-items/categories',
+  menuItemToggleAvailability: (id) => `/admin/menu-items/${id}/toggle-availability`,
+  menuItemImage: (id) => `/admin/menu-items/${id}/image`,
 
   // Branch Management
   branches: '/branches',              // GET (public list)

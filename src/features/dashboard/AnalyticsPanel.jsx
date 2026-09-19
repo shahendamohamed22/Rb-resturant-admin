@@ -2,7 +2,15 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend, BarChart, Bar,
 } from 'recharts';
-import { mockAdminOrders, REVENUE_LAST_7_DAYS, TOP_ITEMS, mockDrivers, RATING_DISTRIBUTION } from '../../shared/api/mockData';
+import {
+  useAnalyticsOverviewQuery,
+  useRevenueTrendQuery,
+  useOrdersByStatusQuery,
+  useOrdersByBranchQuery,
+  useTopItemsQuery,
+  useDriverPerformanceQuery,
+  useRatingDistributionQuery,
+} from './useAnalyticsQueries';
 
 const COLORS = {
   maroon: '#5C1220', gold: '#F2A93B', goldLight: '#F7BE5F', goldPale: '#FBD383',
@@ -10,9 +18,9 @@ const COLORS = {
 };
 
 const STAGE_LABELS = ['Confirmed', 'Preparing', 'On the way', 'Delivered'];
-const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-function KpiCard({ icon, label, value, delta, up }) {
+function KpiCard({ icon, label, value, delta }) {
+  const up = delta >= 0;
   return (
     <div className="bg-white p-3" style={{ borderRadius: 16, border: '1px solid var(--line)', boxShadow: 'var(--shadow-card)' }}>
       <div className="d-flex justify-content-between align-items-start mb-2">
@@ -26,7 +34,7 @@ function KpiCard({ icon, label, value, delta, up }) {
           className="badge"
           style={{ fontSize: 11, fontWeight: 800, padding: '3px 9px', borderRadius: 999, background: up ? '#DCF3E4' : '#F3DCDC', color: up ? 'var(--green-600)' : 'var(--red-600)' }}
         >
-          {delta}
+          {up ? '+' : ''}{delta}%
         </span>
       </div>
       <div style={{ fontFamily: 'var(--font-display)', fontSize: 26, color: 'var(--maroon-800)' }}>{value}</div>
@@ -50,47 +58,41 @@ function ChartCard({ title, subtitle, children, full }) {
 }
 
 function AnalyticsPanel() {
-  const totalRevenue = mockAdminOrders.reduce((s, o) => s + o.total, 0);
-  const totalOrders = mockAdminOrders.length;
-  const avgOrder = totalOrders ? Math.round(totalRevenue / totalOrders) : 0;
-  const delivered = mockAdminOrders.filter((o) => o.stage === 3).length;
-  const completionRate = totalOrders ? Math.round((delivered / totalOrders) * 100) : 0;
+  const { data: overview, isLoading: l1 } = useAnalyticsOverviewQuery('7d');
+  const { data: revenueTrend, isLoading: l2 } = useRevenueTrendQuery(7);
+  const { data: statusData, isLoading: l3 } = useOrdersByStatusQuery();
+  const { data: branchData, isLoading: l4 } = useOrdersByBranchQuery();
+  const { data: topItems, isLoading: l5 } = useTopItemsQuery(5);
+  const { data: driverData, isLoading: l6 } = useDriverPerformanceQuery();
+  const { data: ratingData, isLoading: l7 } = useRatingDistributionQuery();
 
-  const todayIdx = new Date().getDay();
-  const startIdx = (todayIdx - (REVENUE_LAST_7_DAYS.length - 1) + 700) % 7;
-  const revenueData = REVENUE_LAST_7_DAYS.map((value, i) => ({
-    day: DAY_LABELS[(startIdx + i) % 7],
-    revenue: value,
-  }));
-
-  const statusData = [0, 1, 2, 3].map((stage) => ({
-    name: STAGE_LABELS[stage],
-    value: mockAdminOrders.filter((o) => o.stage === stage).length,
-  }));
-
-  const branchData = [1, 2].map((branchId) => ({
-    name: branchId === 1 ? 'Sohag' : 'Girga',
-    value: mockAdminOrders.filter((o) => o.branchId === branchId).length,
-  }));
-
-  const driverData = mockDrivers.map((d) => ({ name: d.fullName, deliveries: d.deliveriesCompleted }));
-  const ratingData = RATING_DISTRIBUTION.map((count, i) => ({ stars: `${i + 1}★`, count }));
+  if (l1 || l2 || l3 || l4 || l5 || l6 || l7) {
+    return <p className="text-muted text-center py-5">Loading analytics...</p>;
+  }
 
   return (
     <div>
       <div className="row g-3 mb-4">
-        <div className="col-6 col-md-3"><KpiCard icon="💰" label="Total Revenue" value={`${totalRevenue} EGP`} delta="+8%" up /></div>
-        <div className="col-6 col-md-3"><KpiCard icon="🧾" label="Total Orders" value={totalOrders} delta="+5%" up /></div>
-        <div className="col-6 col-md-3"><KpiCard icon="📊" label="Avg. Order Value" value={`${avgOrder} EGP`} delta="-2%" up={false} /></div>
-        <div className="col-6 col-md-3"><KpiCard icon="✅" label="Order Completion Rate" value={`${completionRate}%`} delta="+3%" up /></div>
+        <div className="col-6 col-md-3">
+          <KpiCard icon="💰" label="Total Revenue" value={`${overview.totalRevenue} EGP`} delta={overview.deltas.revenue} />
+        </div>
+        <div className="col-6 col-md-3">
+          <KpiCard icon="🧾" label="Total Orders" value={overview.totalOrders} delta={overview.deltas.orders} />
+        </div>
+        <div className="col-6 col-md-3">
+          <KpiCard icon="📊" label="Avg. Order Value" value={`${overview.avgOrderValue} EGP`} delta={overview.deltas.avgOrderValue} />
+        </div>
+        <div className="col-6 col-md-3">
+          <KpiCard icon="✅" label="Order Completion Rate" value={`${overview.completionRatePercent ?? 0}%`} delta={overview.deltas.completionRate ?? 0} />
+        </div>
       </div>
 
       <div className="row g-3">
         <ChartCard title="Revenue — Last 7 Days" subtitle="In Egyptian Pounds" full>
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={revenueData}>
+            <LineChart data={revenueTrend}>
               <CartesianGrid stroke={COLORS.line} vertical={false} />
-              <XAxis dataKey="day" tick={{ fontSize: 12 }} />
+              <XAxis dataKey="date" tick={{ fontSize: 12 }} />
               <YAxis tick={{ fontSize: 12 }} />
               <Tooltip />
               <Line type="monotone" dataKey="revenue" stroke={COLORS.maroon} strokeWidth={2} dot={{ fill: COLORS.gold, r: 4 }} />
@@ -101,7 +103,10 @@ function AnalyticsPanel() {
         <ChartCard title="Current Order Status" subtitle="Distribution of orders by fulfillment stage">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
-              <Pie data={statusData} dataKey="value" nameKey="name" innerRadius={55} outerRadius={85}>
+              <Pie
+                data={statusData.map((s) => ({ name: STAGE_LABELS[s.stage], value: s.count }))}
+                dataKey="value" nameKey="name" innerRadius={55} outerRadius={85}
+              >
                 {statusData.map((_, i) => (
                   <Cell key={i} fill={[COLORS.goldPale, COLORS.gold, COLORS.orange, COLORS.green][i]} />
                 ))}
@@ -115,9 +120,12 @@ function AnalyticsPanel() {
         <ChartCard title="Orders by Branch" subtitle="Share of orders per branch">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
-              <Pie data={branchData} dataKey="value" nameKey="name" innerRadius={55} outerRadius={85}>
+              <Pie
+                data={branchData.map((b) => ({ name: b.nameEn, value: b.count }))}
+                dataKey="value" nameKey="name" innerRadius={55} outerRadius={85}
+              >
                 {branchData.map((_, i) => (
-                  <Cell key={i} fill={[COLORS.maroon, COLORS.gold][i]} />
+                  <Cell key={i} fill={[COLORS.maroon, COLORS.gold, COLORS.blue, COLORS.green][i % 4]} />
                 ))}
               </Pie>
               <Legend wrapperStyle={{ fontSize: 11 }} />
@@ -128,12 +136,12 @@ function AnalyticsPanel() {
 
         <ChartCard title="Top-Selling Items" subtitle="Number of times each item was ordered">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={TOP_ITEMS} layout="vertical" margin={{ left: 20 }}>
+            <BarChart data={topItems} layout="vertical" margin={{ left: 20 }}>
               <CartesianGrid stroke={COLORS.line} horizontal={false} />
               <XAxis type="number" tick={{ fontSize: 11 }} />
               <YAxis type="category" dataKey="nameEn" tick={{ fontSize: 11 }} width={90} />
               <Tooltip />
-              <Bar dataKey="sales" fill={COLORS.gold} radius={[0, 6, 6, 0]} />
+              <Bar dataKey="unitsSold" fill={COLORS.gold} radius={[0, 6, 6, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -142,17 +150,17 @@ function AnalyticsPanel() {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={driverData}>
               <CartesianGrid stroke={COLORS.line} vertical={false} />
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+              <XAxis dataKey="fullName" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} />
               <Tooltip />
-              <Bar dataKey="deliveries" fill={COLORS.blue} radius={[6, 6, 0, 0]} />
+              <Bar dataKey="deliveriesCompleted" fill={COLORS.blue} radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
 
         <ChartCard title="Customer Rating Distribution" subtitle="Number of reviews per star rating" full>
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={ratingData}>
+            <BarChart data={ratingData.map((r) => ({ stars: `${r.stars}★`, count: r.count }))}>
               <CartesianGrid stroke={COLORS.line} vertical={false} />
               <XAxis dataKey="stars" tick={{ fontSize: 12 }} />
               <YAxis tick={{ fontSize: 12 }} />

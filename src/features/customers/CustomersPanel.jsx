@@ -34,7 +34,7 @@ function CustomersPanel() {
         <table className="w-100" style={{ borderCollapse: 'collapse', background: '#fff', borderRadius: 14, overflow: 'hidden', boxShadow: 'var(--shadow-card)' }}>
           <thead>
             <tr style={{ background: 'var(--maroon-800)', color: 'var(--gold-300)' }}>
-              {['Customer', 'Phone', 'Orders', 'Actions'].map((h) => (
+              {['Customer', 'Phone','address' , 'Orders', 'Actions'].map((h) => (
                 <th key={h} style={{ fontSize: 12, padding: '10px 12px', textAlign: 'start' }}>{h}</th>
               ))}
             </tr>
@@ -47,6 +47,7 @@ function CustomersPanel() {
                 <tr key={c.customerId} style={{ background: i % 2 === 1 ? '#FBF6EA' : '#fff' }}>
                   <td style={{ padding: '10px 12px', fontSize: 13, fontWeight: 700 }}>{c.fullName}</td>
                   <td style={{ padding: '10px 12px', fontSize: 13 }}>{c.phone}</td>
+                  <td style={{ padding: '10px 12px', fontSize: 13 }}>{c.address?.trim() || "-----"}</td>
                   <td style={{ padding: '10px 12px', fontSize: 13 }}>{c.ordersCount}</td>
                   <td style={{ padding: '10px 12px' }}>
                     <button

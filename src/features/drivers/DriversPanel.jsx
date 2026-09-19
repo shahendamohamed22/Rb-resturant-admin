@@ -65,7 +65,7 @@ function DriversPanel() {
     try {
       if (editingDriver) {
         const { phone, ...updatable } = formData; // phone can't be changed after creation
-        await updateMutation.mutateAsync({ id: editingDriver.driverId, payload: { id: editingDriver.driverId, ...updatable } });
+        await updateMutation.mutateAsync({ id: editingDriver.driverId, payload: { id: editingDriver.driverId, ...formData } });
       } else {
         await createMutation.mutateAsync(formData);
       }
@@ -109,7 +109,7 @@ function DriversPanel() {
               drivers.map((driver, i) => (
                 <tr key={driver.driverId} style={{ background: i % 2 === 1 ? '#FBF6EA' : '#fff' }}>
                   <td style={{ padding: '10px 12px', fontSize: 13, fontWeight: 700 }}>{driver.fullName}</td>
-                  <td style={{ padding: '10px 12px', fontSize: 13 }}>{driver.phoneNumber}</td>
+                  <td style={{ padding: '10px 12px', fontSize: 13 }}>{driver.phone}</td>
                   <td style={{ padding: '10px 12px', fontSize: 13 }}>{VEHICLE_LABELS[driver.vehicle]}</td>
                   <td style={{ padding: '10px 12px', fontSize: 13 }}>{branchName(driver.branchId)}</td>
                   <td style={{ padding: '10px 12px', fontSize: 13 }}>{driver.deliveriesCompleted}</td>
@@ -217,11 +217,8 @@ function DriverModal({ driver, branches, saving, onClose, onSave }) {
             <input
               className="form-control"
               value={phone}
-              disabled={!!driver}
-              placeholder={driver ? "Not editable — not returned by the API" : ''}
               onChange={(e) => setPhone(e.target.value)}
             />
-            {driver && <p className="text-muted" style={{ fontSize: 11.5, marginTop: 4 }}>Phone can't be changed after creation.</p>}
           </div>
 
           <div className="row g-2 mb-2">
@@ -247,7 +244,7 @@ function DriverModal({ driver, branches, saving, onClose, onSave }) {
             <label className="form-label" style={{ fontSize: 12.5, fontWeight: 800 }}>
               Password {driver && '(leave blank to keep unchanged)'}
             </label>
-            <input className="form-control" value={password} onChange={(e) => setPassword(e.target.value)} />
+            <input type="text" className="form-control" value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
 
           {error && <p className="text-danger" style={{ fontSize: 12 }}>{error}</p>}

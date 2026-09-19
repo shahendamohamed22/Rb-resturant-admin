@@ -1,13 +1,24 @@
-import { useState } from 'react';
-import { mockReviews } from '../../shared/api/mockData';
+import { useQueryClient, useMutation } from '@tanstack/react-query';
+import api from '../../shared/api/axiosClient';
+import { ENDPOINTS } from '../../shared/api/endpoints';
+import { useReviewsQuery } from './useReviewsQuery';
 
 function ReviewsPanel() {
-  const [reviews, setReviews] = useState(mockReviews);
+  const queryClient = useQueryClient();
+  const { data: reviews = [], isLoading, error } = useReviewsQuery();
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => api.delete(ENDPOINTS.reviewById(id)),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'reviews'] }),
+  });
 
   const handleDelete = (id) => {
     if (!window.confirm('Are you sure you want to delete this? This action is permanent.')) return;
-    setReviews((prev) => prev.filter((r) => r.reviewId !== id));
+    deleteMutation.mutate(id);
   };
+
+  if (isLoading) return <div className="text-center py-5 text-muted">Loading reviews...</div>;
+  if (error) return <div className="text-center py-5 text-danger">Failed to load reviews.</div>;
 
   return (
     <div>
@@ -38,9 +49,10 @@ function ReviewsPanel() {
                     <button
                       className="btn btn-sm"
                       style={{ background: 'var(--red-600)', color: '#fff', fontSize: 12, fontWeight: 800, borderRadius: 8 }}
+                      disabled={deleteMutation.isPending}
                       onClick={() => handleDelete(r.reviewId)}
                     >
-                      Delete
+                      {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
                     </button>
                   </td>
                 </tr>
