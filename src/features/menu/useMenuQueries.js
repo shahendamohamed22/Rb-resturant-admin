@@ -22,29 +22,49 @@ export function useMenuForAdminQuery() {
   return useQuery({
     queryKey: ['adminMenuList'],
     queryFn: async () => {
+      const itemsResponse = await api.get(ENDPOINTS.menuItems);
+      const adminItems = itemsResponse.data ?? []; // MenuItemAdminResponse[] — includes isAvailable
+
       const branchesResponse = await api.get(ENDPOINTS.branches);
       const firstBranchId = branchesResponse.data[0]?.id;
-      if (!firstBranchId) return { items: [], branchId: null };
 
-      const response = await api.get(ENDPOINTS.menu(firstBranchId));
-      const items = response.data.flatMap((cat) =>
-        cat.items.map((item) => ({
-          ...item,
+      let categories = [];
+      let labelByKey = {};
+      if (firstBranchId) {
+        const menuResponse = await api.get(ENDPOINTS.menu(firstBranchId));
+        categories = menuResponse.data.map((cat) => ({
           categoryKey: cat.categoryKey,
-          categoryLabel: cat.labelEn,
-        }))
-      );
-      return { items, branchId: firstBranchId };
+          labelAr: cat.labelAr,
+          labelEn: cat.labelEn,
+        }));
+        labelByKey = Object.fromEntries(categories.map((c) => [c.categoryKey, c.labelEn]));
+      }
+
+      const items = adminItems.map((item) => ({
+        ...item,
+        categoryLabel: labelByKey[item.categoryKey] || item.categoryKey,
+      }));
+
+      return { items, categories, branchId: firstBranchId };
     },
   });
 }
 
 // ===== Categories (locally remembered, since there's no GET endpoint) =====
 export function useCategoriesQuery() {
+  const { data: menuData } = useMenuForAdminQuery(); // same query key, shares the cached request — no extra network call
   return useQuery({
-    queryKey: ['adminCategories'],
-    queryFn: async () => loadLocalCategories(),
-    initialData: loadLocalCategories(),
+    queryKey: ['adminCategories', menuData?.categories],
+    queryFn: () => {
+      const fromApi = menuData?.categories ?? [];
+      const local = loadLocalCategories();
+      const merged = [...fromApi];
+      local.forEach((lc) => {
+        if (!merged.some((c) => c.categoryKey === lc.categoryKey)) merged.push(lc);
+      });
+      return merged;
+    },
+    enabled: !!menuData,
   });
 }
 

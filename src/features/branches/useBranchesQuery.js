@@ -6,7 +6,7 @@ export function useBranchesQuery() {
   return useQuery({
     queryKey: ['admin', 'branches'],
     queryFn: async () => {
-      const response = await api.get(ENDPOINTS.branches);
+      const response = await api.get(ENDPOINTS.adminBranches);
       return response.data;
     },
   });

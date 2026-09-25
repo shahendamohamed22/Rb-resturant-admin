@@ -14,26 +14,26 @@ export const ENDPOINTS = {
   menuItemImage: (id) => `/admin/menu-items/${id}/image`,
 
   // Branch Management
-  branches: '/branches',              // GET (public list)
-  createBranch: '/admin/branches',    // POST
+  branches: '/branches',              // GET (public list, no isActive — used only for a branch id lookup)
+  adminBranches: '/admin/branches',   // GET - POST 
   branchById: (id) => `/admin/branches/${id}`,           // PUT, DELETE
   branchToggleStatus: (id) => `/admin/branches/${id}/toggle-status`, // PATCH
 
-  // §7.6.3 Driver Management
+  // Driver Management
   drivers: '/admin/drivers',
   driverById: (id) => `/admin/drivers/${id}`,
   driverStatus: (id) => `/admin/drivers/${id}/status`,
   driverToggleStatus: (id) => `/admin/drivers/${id}/toggle-status`,
 
-  // §7.6.4 Customer Management
+  // Customer Management
   customers: '/admin/customers',
   customerById: (id) => `/admin/customers/${id}`,
 
-  // §7.6.5 Order Monitoring
+  // Order Monitoring
   orders: '/admin/orders',
   orderById: (id) => `/admin/orders/${id}`,
 
-  // §7.6.6 Reviews & Analytics
+  // Reviews & Analytics
   reviews: '/admin/reviews',
   reviewById: (id) => `/admin/reviews/${id}`,
   analyticsOverview: (range) => `/admin/analytics/overview?range=${range}`,

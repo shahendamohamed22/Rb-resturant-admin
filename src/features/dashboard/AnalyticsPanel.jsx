@@ -58,7 +58,7 @@ function ChartCard({ title, subtitle, children, full }) {
 }
 
 function AnalyticsPanel() {
-  const { data: overview, isLoading: l1 } = useAnalyticsOverviewQuery('7d');
+  const { data: overview, isLoading: l1 } = useAnalyticsOverviewQuery('30d');
   const { data: revenueTrend, isLoading: l2 } = useRevenueTrendQuery(7);
   const { data: statusData, isLoading: l3 } = useOrdersByStatusQuery();
   const { data: branchData, isLoading: l4 } = useOrdersByBranchQuery();
@@ -80,7 +80,7 @@ function AnalyticsPanel() {
           <KpiCard icon="🧾" label="Total Orders" value={overview.totalOrders} delta={overview.deltas.orders} />
         </div>
         <div className="col-6 col-md-3">
-          <KpiCard icon="📊" label="Avg. Order Value" value={`${overview.avgOrderValue} EGP`} delta={overview.deltas.avgOrderValue} />
+          <KpiCard icon="📊" label="Avg. Order Value" value={`${overview.avgOrderValue.toFixed(2)} EGP`} delta={overview.deltas.avgOrderValue} />
         </div>
         <div className="col-6 col-md-3">
           <KpiCard icon="✅" label="Order Completion Rate" value={`${overview.completionRatePercent ?? 0}%`} delta={overview.deltas.completionRate ?? 0} />

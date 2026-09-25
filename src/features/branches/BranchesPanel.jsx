@@ -163,6 +163,7 @@ function BranchModal({ branch, saving, onClose, onSave }) {
     const [nameAr, setNameAr] = useState(branch?.nameAr || '');
     const [nameEn, setNameEn] = useState(branch?.nameEn || '');
     const [deliveryFee, setDeliveryFee] = useState(branch?.deliveryFee || '');
+    const [hotline, setHotline] = useState(branch?.hotlinePhones || '');
     const [etaMinMinutes, setEtaMinMinutes] = useState(branch?.etaMinMinutes || '');
     const [etaMaxMinutes, setEtaMaxMinutes] = useState(branch?.etaMaxMinutes || '');
     const [error, setError] = useState('');
@@ -174,7 +175,7 @@ function BranchModal({ branch, saving, onClose, onSave }) {
             return;
         }
         onSave({
-            nameAr, nameEn,
+            nameAr, nameEn, hotline,
             deliveryFee: Number(deliveryFee),
             etaMinMinutes: Number(etaMinMinutes),
             etaMaxMinutes: Number(etaMaxMinutes),
@@ -204,6 +205,11 @@ function BranchModal({ branch, saving, onClose, onSave }) {
                         </div>
                     </div>
                     {branch && <p className="text-muted" style={{ fontSize: 11.5, marginTop: -4 }}>Branch names can't be changed after creation.</p>}
+
+                    <div className="mb-2">
+                        <label className="form-label" style={{ fontSize: 12.5, fontWeight: 800 }}>hotline (EGP)</label>
+                        <input type="tel" className="form-control" value={hotline} onChange={(e) => setHotline(e.target.value)} />
+                    </div>
 
                     <div className="mb-2">
                         <label className="form-label" style={{ fontSize: 12.5, fontWeight: 800 }}>Delivery fee (EGP)</label>

@@ -4,9 +4,9 @@ import { ENDPOINTS } from '../../shared/api/endpoints';
 import { useOrdersQuery } from './useOrdersQuery';
 import { useBranchesQuery } from '../branches/useBranchesQuery';
 
-const STAGE_LABELS = ['Confirmed', 'Preparing', 'On the way', 'Delivered'];
-const STAGE_COLORS = ['var(--gold-200)', '#DCE9F7', '#FDE3D0', '#DCF3E4'];
-const STAGE_TEXT = ['var(--maroon-800)', 'var(--blue-600)', '#B2601A', 'var(--green-600)'];
+const STAGE_LABELS = ['Confirmed', 'Preparing', 'On the way', 'Waiting approval', 'Delivered'];
+const STAGE_COLORS = ['var(--gold-200)', '#DCE9F7', '#FDE3D0', '#FFF3CD', '#DCF3E4'];
+const STAGE_TEXT = ['var(--maroon-800)', 'var(--blue-600)', '#B2601A', '#A67C00', 'var(--green-600)'];
 
 function OrdersPanel() {
   const queryClient = useQueryClient();
@@ -15,9 +15,14 @@ function OrdersPanel() {
 
   const branchName = (id) => branches.find((b) => Number(b.id) === Number(id))?.nameEn || `Branch #${id}`;
 
-  const deleteMutation = useMutation({
+       const deleteMutation = useMutation({
     mutationFn: (id) => api.delete(ENDPOINTS.orderById(id)),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'orders'] }),
+    onSuccess: (_data, deletedId) => {
+      queryClient.setQueryData(['admin', 'orders'], (old = []) =>
+        old.filter((o) => o.orderId !== deletedId)
+      );
+      // invalidateQueries متشال مؤقتًا للاختبار
+    },
   });
 
   const handleDelete = (id) => {
@@ -42,7 +47,7 @@ function OrdersPanel() {
         <table className="w-100" style={{ borderCollapse: 'collapse', background: '#fff', borderRadius: 14, overflow: 'hidden', boxShadow: 'var(--shadow-card)' }}>
           <thead>
             <tr style={{ background: 'var(--maroon-800)', color: 'var(--gold-300)' }}>
-              {['Order #', 'Branch', 'Customer', 'Total', 'Status', 'Date', 'Actions'].map((h) => (
+              {['Order #', 'Branch', 'Customer', 'Total', 'Status', 'Time', 'Date', 'Actions'].map((h) => (
                 <th key={h} style={{ fontSize: 12, padding: '10px 12px', textAlign: 'start' }}>{h}</th>
               ))}
             </tr>
@@ -66,6 +71,15 @@ function OrdersPanel() {
                     >
                       {STAGE_LABELS[o.stage]}
                     </span>
+                  </td>
+                  <td style={{ padding: '10px 12px', fontSize: 13 }}>
+                    {new Date(o.createdAt).toLocaleTimeString('en-US', {
+                      timeZone: 'Africa/Cairo',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit',
+                      hour12: true
+                    })}
                   </td>
                   <td style={{ padding: '10px 12px', fontSize: 13 }}>
                     {new Date(o.createdAt).toLocaleDateString('en-US')}
